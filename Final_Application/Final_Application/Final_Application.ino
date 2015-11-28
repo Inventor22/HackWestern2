@@ -10,9 +10,11 @@
 #define FINGERSSPREAD_PIN 7
 #define DOUBLETAP_PIN 8
 
-MyoController myo = MyoController();
-
 SoftwareSerial ss(2, 3); // rx, tx
+
+MyoController myo = MyoController(ss);
+
+
 
 rgb_lcd lcd;
 
@@ -21,7 +23,7 @@ int pin = 13;
 uint32_t tNow, tPrev;
 
 void setup() {
-  ss.begin(9600);
+  //ss.begin(9600);
   
   //  pinMode(FIST_PIN, OUTPUT);
   //  pinMode(WAVEIN_PIN, OUTPUT);
