@@ -65,6 +65,11 @@ public:
 	{
 		currentPose = pose;
 
+		myo->unlock(myo::Myo::unlockHold);
+
+		// Notify the Myo that the pose has resulted in an action, in this case changing
+		// the text on the screen. The Myo will vibrate.
+		myo->notifyUserAction();
 	}
 
 	// onArmSync() is called whenever Myo has recognized a Sync Gesture after someone has put it on their
