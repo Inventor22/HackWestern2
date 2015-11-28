@@ -71,8 +71,8 @@ void loop()
       break;
     case fist:
       lcd.clear();
-      lcd.print("first");
-      //Serial.println("first");
+      lcd.print("fist");
+      //Serial.println("fist");
       //digitalWrite(FIST_PIN,HIGH);
       break;
     case waveIn:
