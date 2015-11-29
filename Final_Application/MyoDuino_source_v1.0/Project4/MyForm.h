@@ -201,12 +201,15 @@ namespace Project4 {
 	private: System::Void comPortSelector_SelectedIndexChanged(System::Object^  sender, System::EventArgs^  e) {
 		this->serialPortToDevice->PortName = this->comPortSelector->SelectedItem->ToString();
 	}
+	//public: void sendDataOverComm(unsigned char buffer[], int count) {
 	public: void sendDataOverComm(System::String^ dataToSend) {
 		try
 		{
 			if (this->serialPortToDevice->IsOpen)
 			{
 				this->serialPortToDevice->WriteLine(dataToSend);
+				//array<unsigned char>^ buf = { buffer[0], buffer[1], buffer[2], buffer[3], buffer[4] };
+				//this->serialPortToDevice->Write(buf, 0, count);
 			}
 
 		}

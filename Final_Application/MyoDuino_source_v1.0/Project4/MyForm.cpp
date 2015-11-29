@@ -14,6 +14,8 @@ using namespace Project4;
 #include <algorithm>
 #include <chrono>
 
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+
 
 // Classes that inherit from myo::DeviceListener can be used to receive events from Myo devices. DeviceListener
 // provides several virtual functions for handling different kinds of events. If you do not override an event, the
@@ -264,17 +266,32 @@ int main()
 
 			//frm1->sendDataOverComm(poseStorageString);
 
-			bool dropHammer = poseString.find("fingersSpread") == std::string::npos;
+			// cannot be integer 0, else (char)0 effectively becomes premature null terminator of string
+			char dropHammer = (poseString.find("fingersSpread") != std::string::npos) ? '1' : '0';
 
-			int turnVal = map(collector.roll_w, leftMax, rightMax, -100, 100);
-			int fbVal = map(collector.pitch_w, forwardMax, backwardsMax, -100, 100);
+			int turnVal = map(collector.roll_w, leftMax, rightMax, 1, 101);
+			int fbVal = map(collector.pitch_w, forwardMax, backwardsMax, 1, 101);
 
-			char rollPitchChars[] = { 'P', (char)turnVal, (char) fbVal, (char) dropHammer, '!' };
+			turnVal = constrain(turnVal, 1, 101);
+			fbVal   = constrain(fbVal,   1, 101);
+
+			if (fbVal <= 51) {
+				turnVal = 51;
+			}
+
+			std::cout << "turnVal: " << (int)((char)turnVal) << ", fbVal: " << (int)((char)fbVal) << ", hammer: " << dropHammer << std::endl;
+			//std::cout << "turnVal: " << (int)((unsigned char)((char)turnVal)) << ", fbVal: " << (int)((unsigned char)((char)fbVal)) << ", hammer: " << dropHammer << std::endl;
+			//std::cout << "turnVal: " << ((int)((char)turnVal)) << ", fbVal: " << ((int)((char)fbVal)) << ", hammer: " << ((int)((char)dropHammer));
+
+
+			char rollPitchChars[] = { 'S', (char)turnVal, (char)fbVal, dropHammer, '!' };
 
 			std::string rollpitchyawString(rollPitchChars);
 			String^ rollPitchStorageString = gcnew String(rollpitchyawString.c_str());
 
 			frm1->sendDataOverComm(rollPitchStorageString);
+
+			//frm1->sendDataOverComm(rollPitchChars, 5);
 						
 		}
 
