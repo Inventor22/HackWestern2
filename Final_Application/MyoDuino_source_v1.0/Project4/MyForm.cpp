@@ -12,6 +12,7 @@ using namespace Project4;
 #include <stdexcept>
 #include <string>
 #include <algorithm>
+#include <chrono>
 
 
 // Classes that inherit from myo::DeviceListener can be used to receive events from Myo devices. DeviceListener
@@ -101,7 +102,13 @@ public:
 		// Print out the orientation. Orientation data is always available, even if no arm is currently recognized.
 
 		
-		std::cout << '[' << std::string(roll_w, '*') << std::string(18 - roll_w, ' ') << ']'
+		/*std::cout
+			<< std::string(std::to_string(roll_w))  <<  '[' << std::string(roll_w, '*') << std::string(18 - roll_w,  ' ') << ']'
+			<< std::string(std::to_string(pitch_w)) << '[' << std::string(pitch_w, '*') << std::string(18 - pitch_w, ' ') << ']'
+			<< std::string(std::to_string(yaw_w))   << '[' << std::string(yaw_w,   '*') << std::string(18 - yaw_w,   ' ') << ']';*/
+
+		std::cout
+			<< '[' << std::string(roll_w, '*') << std::string(18 - roll_w, ' ') << ']'
 			<< '[' << std::string(pitch_w, '*') << std::string(18 - pitch_w, ' ') << ']'
 			<< '[' << std::string(yaw_w, '*') << std::string(18 - yaw_w, ' ') << ']';
 		
@@ -121,6 +128,13 @@ public:
 			std::cout << "[?]" << '[' << std::string(14, ' ') << ']';
 		}
 
+		//char rollPitchChars[] = { 'P', (char)roll_w,(char)pitch_w, '!' };
+
+		//std::string rollpitchyawString(rollPitchChars);
+		//String^ rollPitchStorageString = gcnew String(rollpitchyawString.c_str());
+
+		//std::cout << rollpitchyawString;
+
 		std::cout << std::flush;
 	}
 
@@ -132,6 +146,11 @@ public:
 	int roll_w, pitch_w, yaw_w;
 	myo::Pose currentPose;
 };
+
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 
 int main()
 {
@@ -178,7 +197,59 @@ int main()
 		{
 			hub.setLockingPolicy(myo::Hub::LockingPolicy::lockingPolicyNone);
 		}
+
+		int rollMin, rollMax, pitchMin, pitchMax;
+		int leftMax = 0, rightMax = 0, forwardMax = 0, backwardsMax = 0;
+
+		std::cout << "Calibrating started" << std::endl;
+
+		// Calibrate left turn
+		std::cout << "Hold arm straight out, rotate left" << std::endl;
+		for (int i = 5; i > 0; i--) {
+			std::cout << i << "...";
+			_sleep(500);
+		}
+		hub.run(1000 / 20);
+		leftMax = collector.roll_w;
+		std::cout << "Calibrated Left Turn." << std::endl;
+
+		// Calibrate right turn
+		std::cout << "Hold arm straight out, rotate right" << std::endl;
+		for (int i = 5; i > 0; i--) {
+			std::cout << i << "...";
+			_sleep(500);
+		}
+		hub.run(1000 / 20);
+		rightMax = collector.roll_w;
+		std::cout << "Calibrated Right Turn." << std::endl;
+		
+		// Calibrate forward movement
+		std::cout << "Hold arm up, neutral rotation" << std::endl;
+		for (int i = 5; i > 0; i--) {
+			std::cout << i << "...";
+			_sleep(500);
+		}
+		hub.run(1000 / 20);
+		forwardMax = collector.pitch_w;
+		std::cout << "Calibrated Forward Movement." << std::endl;
+
+		// Calibrate backwards movement
+		std::cout << "Hold arm down, neutral rotation" << std::endl;
+		for (int i = 5; i > 0; i--) {
+			std::cout << i << "...";
+			_sleep(500);
+		}
+		hub.run(1000 / 20);
+		backwardsMax = collector.pitch_w;
+		std::cout << "Calibrated Backwards Movement." << std::endl;
+
+		std::cout << "Calibrating Finished" << std::endl;
+
+		std::cout << "left threshold = " << leftMax << ", right threshold = " << rightMax << std::endl;
+		std::cout << "forward threshold" << forwardMax << ", backwards threshold = " << backwardsMax << std::endl;
+
 		while (1) {
+
 			// In each iteration of our main loop, we run the Myo event loop for a set number of milliseconds.
 			// In this case, we wish to update our display 20 times a second, so we run for 1000/20 milliseconds.
 			hub.run(1000 / 20);
@@ -188,12 +259,17 @@ int main()
 			collector.print();
 
 			std::string poseString = (collector.currentPose.toString());
-
+			 
 			String^ poseStorageString = gcnew String(poseString.c_str());
 
-			frm1->sendDataOverComm(poseStorageString);
+			//frm1->sendDataOverComm(poseStorageString);
 
-			char rollPitchChars[] = { 'P', (char)collector.roll_w,(char)collector.pitch_w, '!' };
+			bool dropHammer = poseString.find("fingersSpread") == std::string::npos;
+
+			int turnVal = map(collector.roll_w, leftMax, rightMax, -100, 100);
+			int fbVal = map(collector.pitch_w, forwardMax, backwardsMax, -100, 100);
+
+			char rollPitchChars[] = { 'P', (char)turnVal, (char) fbVal, (char) dropHammer, '!' };
 
 			std::string rollpitchyawString(rollPitchChars);
 			String^ rollPitchStorageString = gcnew String(rollpitchyawString.c_str());
@@ -210,4 +286,6 @@ int main()
 		std::cin.ignore();
 		return 1;
 	}
+
+
 }

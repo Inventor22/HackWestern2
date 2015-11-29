@@ -24,7 +24,7 @@ uint32_t tNow, tPrev;
 
 void setup() {
   //ss.begin(9600);
-  
+
   //  pinMode(FIST_PIN, OUTPUT);
   //  pinMode(WAVEIN_PIN, OUTPUT);
   //  pinMode(WAVEOUT_PIN, OUTPUT);
@@ -37,11 +37,11 @@ void setup() {
 
   myo.initMyo();
 
-      lcd.begin(16, 2);
-    // Print a message to the LCD.
-    lcd.print("set color");
-     lcd.setRGB(110, 0, 110);
-  
+  lcd.begin(16, 2);
+  // Print a message to the LCD.
+  lcd.print("set color");
+  lcd.setRGB(110, 0, 110);
+
   //Serial.println("init myo");
   tNow = tPrev = millis();
 }
@@ -51,12 +51,29 @@ void loop()
 {
   //Serial.println("HI");
 
-  tNow = millis();
-  if (tNow - tPrev > 1000) {
-    tPrev = tNow;
-    //Serial.println(".");
-  }
   myo.updatePose();
+
+  lcd.clear();
+//  lcd.print(sizeof(myo.msgChar));
+//  lcd.print(" ");
+//  lcd.print(myo.msgChar[0]);
+//  lcd.print(" ");
+//  lcd.print(myo.msgChar[1], DEC);
+//  lcd.print(" ");
+//  lcd.print(myo.msgChar[2], DEC);
+//  lcd.print(" ");
+//  lcd.print(myo.msgChar[3]);
+//  lcd.print(" ");
+//  lcd.print(myo.msgChar[4]);
+//  lcd.print(" ");
+//  lcd.print(myo.msgChar[5]);
+
+      lcd.print("Roll: ");
+      lcd.print(myo.roll);
+      lcd.setCursor(1,1);
+      lcd.print(" Pitch: ");
+      lcd.print(myo.pitch);
+
   switch ( myo.getCurrentPose() ) {
     case rest:
       lcd.clear();
@@ -71,8 +88,8 @@ void loop()
       break;
     case fist:
       lcd.clear();
-      lcd.print("fist");
-      //Serial.println("fist");
+      lcd.print("first");
+      //Serial.println("first");
       //digitalWrite(FIST_PIN,HIGH);
       break;
     case waveIn:
@@ -98,6 +115,13 @@ void loop()
       lcd.print("doubleTap");
       //Serial.println("doubleTap");
       //digitalWrite(DOUBLETAP_PIN,HIGH);
+      break;
+    case rollPitch:
+      lcd.clear();
+      lcd.print("Roll: ");
+      //lcd.print(myo.roll);
+      lcd.print(" Pitch: ");
+      //lcd.print(myo.pitch);
       break;
   }
   delay(100);
