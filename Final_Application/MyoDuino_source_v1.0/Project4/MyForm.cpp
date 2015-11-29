@@ -279,7 +279,8 @@ int main()
 				turnVal = 51;
 			}
 
-			std::cout << "turnVal: " << (int)((char)turnVal) << ", fbVal: " << (int)((char)fbVal) << ", hammer: " << dropHammer << std::endl;
+			//std::cout << "turnVal: " << (int)((char)turnVal) << ", fbVal: " << (int)((char)fbVal) << ", hammer: " << dropHammer << std::endl;
+			//std::cout << "turnVal: " << (int)((char)turnVal)-51 << ", fbVal: " << (int)((char)fbVal)-51 << ", hammer: " << dropHammer << std::endl;
 			//std::cout << "turnVal: " << (int)((unsigned char)((char)turnVal)) << ", fbVal: " << (int)((unsigned char)((char)fbVal)) << ", hammer: " << dropHammer << std::endl;
 			//std::cout << "turnVal: " << ((int)((char)turnVal)) << ", fbVal: " << ((int)((char)fbVal)) << ", hammer: " << ((int)((char)dropHammer));
 
