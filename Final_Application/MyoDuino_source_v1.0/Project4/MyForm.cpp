@@ -189,9 +189,16 @@ int main()
 
 			std::string poseString = (collector.currentPose.toString());
 
-			String^ poseStrorageString = gcnew String(poseString.c_str());
+			String^ poseStorageString = gcnew String(poseString.c_str());
 
-			frm1->sendDataOverComm(poseStrorageString);
+			frm1->sendDataOverComm(poseStorageString);
+
+			char rollPitchChars[] = { 'P', (char)collector.roll_w,(char)collector.pitch_w, '!' };
+
+			std::string rollpitchyawString(rollPitchChars);
+			String^ rollPitchStorageString = gcnew String(rollpitchyawString.c_str());
+
+			frm1->sendDataOverComm(rollPitchStorageString);
 						
 		}
 

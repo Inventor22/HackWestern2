@@ -21,30 +21,35 @@ Stepper stepper(stepsPerRev, 9, 11, 10, 12);
 
 void setup()
 {
-	Serial.begin(115200);
-	ss.begin(9600);
+  Serial.begin(115200);
+  ss.begin(9600);
 
-	lcd.begin(16, 2);
-	lcd.setRGB(110, 0, 110);
+  lcd.begin(16, 2);
+  lcd.setRGB(110, 0, 110);
 
-	stepper.setSpeed(10); // rpm
+  stepper.setSpeed(10); // rpm
 }
 
 void loop()
 {
-	
+
 }
 
 void serialEvent() {
-	if (Serial.available() > 2) {
-		byte b = Serial.read();
+  if (Serial.available() >= 3) {
+    byte cmd = Serial.read();
+    byte speed = Serial.read();
+    byte terminator = Serial.read();
 
-		switch (b) {
-		case 'F':
-		case 'B':
-		case 'L':
-		case 'R':
-		case 'H':
-		}
-	}
+    if (terminator == '!') {
+      switch (cmd) {
+        case 'F':
+
+        case 'B':
+        case 'L':
+        case 'R':
+        case 'H':
+      }
+    }
+  }
 }
