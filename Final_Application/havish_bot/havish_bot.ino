@@ -1,3 +1,5 @@
+#include <Servo.h>
+
 int pinMotorA1 = 4;
 int pinMotorB1 = 2;
 int pinMotor1 = 5;
@@ -11,14 +13,18 @@ int pinMotorA4 = 8;
 int pinMotorB4 = 7;
 int pinMotor4 = 6;
 
+int pinHammer = 10;
 
+const int maxSpeed = 255;
+
+int speed, turn, hammerState;
 
 enum MoveState {
-  LB,
-  RB,
-  LF,
-  RF,
-  S
+	LB,
+	RB,
+	LF,
+	RF,
+	S
 };
 
 
@@ -28,177 +34,147 @@ char  determinant;
 char info;
 char data[4];
 
+String storageStr;
+String msgChar;
+
+Servo hammer;
+
 void setup() {
 
-  Serial.begin(9600);
+	Serial.begin(9600);
 
-  pinMode(pinMotorA1, OUTPUT);
-  pinMode(pinMotorB1, OUTPUT);
-  pinMode(pinMotor1, OUTPUT);
-  pinMode(pinMotorA2, OUTPUT);
-  pinMode(pinMotorB2, OUTPUT);
-  pinMode(pinMotor2, OUTPUT);
-  pinMode(pinMotorA3, OUTPUT);
-  pinMode(pinMotorB3, OUTPUT);
-  pinMode(pinMotor3, OUTPUT);
-  pinMode(pinMotorA4, OUTPUT);
-  pinMode(pinMotorB4, OUTPUT);
-  pinMode(pinMotor4, OUTPUT);
+	hammer.attach(pinHammer);
+
+	pinMode(pinMotorA1, OUTPUT);
+	pinMode(pinMotorB1, OUTPUT);
+	pinMode(pinMotor1, OUTPUT);
+	pinMode(pinMotorA2, OUTPUT);
+	pinMode(pinMotorB2, OUTPUT);
+	pinMode(pinMotor2, OUTPUT);
+	pinMode(pinMotorA3, OUTPUT);
+	pinMode(pinMotorB3, OUTPUT);
+	pinMode(pinMotor3, OUTPUT);
+	pinMode(pinMotorA4, OUTPUT);
+	pinMode(pinMotorB4, OUTPUT);
+	pinMode(pinMotor4, OUTPUT);
 
 }
 
 int i = 0;
 void loop() {
-  if (Serial.available() > 0) {
-    info = Serial.read();
-    data[i] = info;
-    //Serial.println(data[i]);
-    i++;
-    if (info == '!') {
-      Move();
-    }
-  }
+	if (checkForData()) {
+		Move();
+	}
+}
+
+bool checkForData() {
+	if (Serial.available())
+	{
+		byte firstByte = Serial.read();
+		if (firstByte == 'S') {
+			storageStr = String("S");
+			while (Serial.available())
+			{
+				storageStr = storageStr + char(Serial.read());
+				delay(1);
+			}
+
+			msgChar = storageStr;
+			//serial.print(msgChar);
+
+			if (msgChar[0] == 'S' && msgChar[4] == '!') {
+				byte roll = msgChar[1];
+				turn = roll - 51;// - 100;
+
+				byte pitch = msgChar[2];
+				speed = pitch - 51;// - 100;
+								   //roll  = (int8_t)(((int) msgChar[1]) - 100);
+								   //pitch = (int8_t)(((int) msgChar[2]) - 100);
+				hammerState = msgChar[3] == '1';
+
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+	}
+	else {
+		return false;
+	}
 }
 
 void Move() {
+	if (speed < 0) {
+		digitalWrite(pinMotorA1, LOW);
+		digitalWrite(pinMotorB1, HIGH);
 
-  if (data[0] == 'S') {
-    Serial.println(data[0]);
-    if (data[1] < 51) { //turning left
-      if (data[2] < 51) { //backwards
-        det = LB; //left back
-      }
-      if (data[2] > 50) { //forwards
-        det = LF; //left forward
-      }
-    }
+		digitalWrite(pinMotorA2, LOW);
+		digitalWrite(pinMotorB2, HIGH);
 
-    if (data[1] > 50) { //turning right
-      if (data[2] < 51) { //backwards
-        det = RB; //right back
-      }
-      if (data[2] > 50) { //forwards
-        det = RF; //right forward
-        Serial.println("Forward Right");
-      }
-    }
-  }
+		digitalWrite(pinMotorA3, LOW);
+		digitalWrite(pinMotorB3, HIGH);
 
-  int V = map(abs(data[2]), 0, 100, 0, 255);
+		digitalWrite(pinMotorA4, LOW);
+		digitalWrite(pinMotorB4, HIGH);
+	}
+	else if (speed > 0) {
+		digitalWrite(pinMotorA1, HIGH);
+		digitalWrite(pinMotorB1, LOW);
 
-  //det= check();
-  switch (det) {
-    case LF: { //left forwards
-        digitalWrite(pinMotorA1, HIGH);
-        digitalWrite(pinMotorB1, LOW);
-        analogWrite(pinMotor1, V / 2);
-        digitalWrite(pinMotorA2, HIGH);
-        digitalWrite(pinMotorB2, LOW);
-        analogWrite(pinMotor2, V / 2);
-        digitalWrite(pinMotorA3, HIGH);
-        digitalWrite(pinMotorB3, LOW);
-        analogWrite(pinMotor3, V);
-        digitalWrite(pinMotorA4, HIGH);
-        digitalWrite(pinMotorB4, LOW);
-        analogWrite(pinMotor4, V);
-        break;
-      }
+		digitalWrite(pinMotorA2, HIGH);
+		digitalWrite(pinMotorB2, LOW);
 
-    case LB: { //LEFT BACK
-        digitalWrite(pinMotorA1, LOW);
-        digitalWrite(pinMotorB1, HIGH);
-        analogWrite(pinMotor1, V);
-        digitalWrite(pinMotorA2, LOW);
-        digitalWrite(pinMotorB2, HIGH);
-        analogWrite(pinMotor2, V);
-        digitalWrite(pinMotorA3, LOW);
-        digitalWrite(pinMotorB3, HIGH);
-        analogWrite(pinMotor3, V / 2);
-        digitalWrite(pinMotorA4, LOW);
-        digitalWrite(pinMotorB4, HIGH);
-        analogWrite(pinMotor4, V / 2);
-        break;
-      }
+		digitalWrite(pinMotorA3, HIGH);
+		digitalWrite(pinMotorB3, LOW);
 
-    case RF: { //RIGHT forward
-        digitalWrite(pinMotorA1, HIGH);
-        digitalWrite(pinMotorB1, LOW);
-        analogWrite(pinMotor1, V);
-        digitalWrite(pinMotorA2, HIGH);
-        digitalWrite(pinMotorB2, LOW);
-        analogWrite(pinMotor2, V);
-        digitalWrite(pinMotorA3, HIGH);
-        digitalWrite(pinMotorB3, LOW);
-        analogWrite(pinMotor3, V / 2);
-        digitalWrite(pinMotorA4, HIGH);
-        digitalWrite(pinMotorB4, LOW);
-        analogWrite(pinMotor4, V / 2);
-        break;
-      }
+		digitalWrite(pinMotorA4, HIGH);
+		digitalWrite(pinMotorB4, LOW);
+	}
 
-    case RB: { //RIGHT BACK
-        digitalWrite(pinMotorA1, LOW);
-        digitalWrite(pinMotorB1, HIGH);
-        analogWrite(pinMotor1, V / 2);
-        digitalWrite(pinMotorA2, LOW);
-        digitalWrite(pinMotorB2, HIGH);
-        analogWrite(pinMotor2, V / 2);
-        digitalWrite(pinMotorA3, LOW);
-        digitalWrite(pinMotorB3, HIGH);
-        analogWrite(pinMotor3, V);
-        digitalWrite(pinMotorA4, LOW);
-        digitalWrite(pinMotorB4, HIGH);
-        analogWrite(pinMotor4, V);
-        break;
-      }
+	if (speed == 0) {
+		digitalWrite(pinMotorA1, LOW);
+		digitalWrite(pinMotorB1, HIGH);
+		analogWrite(pinMotor1, 0);
 
-    case S: { //STOP
-        digitalWrite(pinMotorA1, LOW);
-        digitalWrite(pinMotorB1, HIGH);
-        analogWrite(pinMotor1, 0);
-        digitalWrite(pinMotorA2, LOW);
-        digitalWrite(pinMotorB2, HIGH);
-        analogWrite(pinMotor2, 0);
-        digitalWrite(pinMotorA3, LOW);
-        digitalWrite(pinMotorB3, HIGH);
-        analogWrite(pinMotor3, 0);
-        digitalWrite(pinMotorA4, LOW);
-        digitalWrite(pinMotorB4, HIGH);
-        analogWrite(pinMotor4, 0);
-        break;
-      }
+		digitalWrite(pinMotorA2, LOW);
+		digitalWrite(pinMotorB2, HIGH);
+		analogWrite(pinMotor2, 0);
 
+		digitalWrite(pinMotorA3, LOW);
+		digitalWrite(pinMotorB3, HIGH);
+		analogWrite(pinMotor3, 0);
 
-  }
+		digitalWrite(pinMotorA4, LOW);
+		digitalWrite(pinMotorB4, HIGH);
+		analogWrite(pinMotor4, 0);
+	}
+	else {
+		int mappedSpeed = map(abs(speed), 0, 50, 0, maxSpeed);
+
+		if (turn == 0) {
+			analogWrite(pinMotor1, mappedSpeed);
+			analogWrite(pinMotor2, mappedSpeed);
+			analogWrite(pinMotor3, mappedSpeed);
+			analogWrite(pinMotor4, mappedSpeed);
+
+			Serial.println(mappedSpeed);
+		}
+		else {
+			int slowerWheel = mappedSpeed * (50 - abs(turn)) / 50;
+
+			if (turn < 0) {
+				analogWrite(pinMotor1, slowerWheel);
+				analogWrite(pinMotor2, slowerWheel);
+				analogWrite(pinMotor3, mappedSpeed);
+				analogWrite(pinMotor4, mappedSpeed);
+			}
+			else {
+				analogWrite(pinMotor1, mappedSpeed);
+				analogWrite(pinMotor2, mappedSpeed);
+				analogWrite(pinMotor3, slowerWheel);
+				analogWrite(pinMotor4, slowerWheel);
+			}
+		}
+	}
 }
-//
-//int check()
-//{
-//  if (Serial.available() > 0)    //Check for data on the serial lines.
-//  {
-//    dataIn = Serial.read();  //Get the character sent by the phone and store it in 'dataIn'.
-//        if (det == LF)
-//        {
-//          determinant = LF;
-//        }
-//        else if (det == LB)
-//        {
-//          determinant = LB;
-//        }
-//        else if (det == RF)
-//        {
-//          determinant = RF;
-//        }
-//        else if (det == RB)
-//        {
-//          determinant = RB;
-//        }
-//        else if(det == 'S')
-//        {
-//          determinant = 'S';
-//        }
-//  }
-//
-//
-//    return determinant;
-//}
