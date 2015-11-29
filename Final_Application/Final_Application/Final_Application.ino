@@ -11,10 +11,14 @@ MyoController myo = MyoController(ss);
 
 rgb_lcd lcd;
 
-uint32_t tNow, tPrev;
+uint32_t tNow, tPrev, tThrown;
 
 Servo hammer;
 const int pinHammer = 6;
+const int posHammerUp = 90;
+const int posHammerDown = 150;
+
+bool reloadHammer = false;
 
 void setup() {
 	Serial.begin(115200);
@@ -24,11 +28,12 @@ void setup() {
 
 	MotorDriver.setDifferentialSpeed(20, 0);
 
-	delay(3000);
+	delay(2000);
 
 	MotorDriver.setEnabled(false);
 
 	hammer.attach(pinHammer);
+	hammer.write(posHammerUp);
 
 	myo.initMyo();
 
@@ -57,6 +62,20 @@ void loop()
 		printMyoData();
 
 		MotorDriver.setDifferentialSpeed(myo.pitch, myo.roll);
+
+		tNow = millis();
+		if (myo.throwHammer && tNow - tPrev > 3000) {
+			hammer.write(posHammerDown);
+			tPrev = tNow;
+			myo.throwHammer = false;
+			reloadHammer = false;
+		}
+	}
+	tNow = millis();
+
+	if (!reloadHammer && tNow - tPrev > 1000) {
+		hammer.write(posHammerUp);
+		reloadHammer = true;
 	}
 }
 
